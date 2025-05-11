@@ -21,9 +21,8 @@ public class AuthService {
             throw new IllegalArgumentException("Email already in use");
         }
 
-        UserAccount user = new UserAccount();
-        user.setEmail(request.email());
-        user.setPassword(passwordEncoder.encode(request.password()));
+        String encodedPassword = passwordEncoder.encode(request.password());
+        UserAccount user = new UserAccount(request.email(), encodedPassword);
 
         userRepository.save(user);
         return tokenService.generateTokenPair(user);
