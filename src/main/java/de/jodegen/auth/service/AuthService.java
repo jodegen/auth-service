@@ -3,6 +3,7 @@ package de.jodegen.auth.service;
 import de.jodegen.auth.model.UserAccount;
 import de.jodegen.auth.repository.*;
 import de.jodegen.auth.rest.dto.*;
+import io.jsonwebtoken.JwtException;
 import lombok.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ public class AuthService {
     private final UserAccountRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
+    private final JwtService jwtService;
 
     public TokenPairResponse register(@NonNull RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
@@ -46,5 +48,15 @@ public class AuthService {
     public void logout(@NonNull String refreshToken) {
         refreshTokenRepository.findByToken(refreshToken)
                 .ifPresent(refreshTokenRepository::delete);
+    }
+
+
+    public boolean validateToken(String token) {
+        try {
+            jwtService.validateToken(token);
+            return true;
+        } catch (JwtException e) {
+            return false;
+        }
     }
 }
