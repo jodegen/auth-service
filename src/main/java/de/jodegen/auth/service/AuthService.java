@@ -50,7 +50,6 @@ public class AuthService {
                 .ifPresent(refreshTokenRepository::delete);
     }
 
-
     public boolean validateToken(String token) {
         try {
             jwtService.validateToken(token);
