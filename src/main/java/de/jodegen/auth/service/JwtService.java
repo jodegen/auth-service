@@ -3,6 +3,7 @@ package de.jodegen.auth.service;
 import de.jodegen.auth.model.UserAccount;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,9 +21,14 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private long jwtExpirationMs;
 
+    @Value("${jwt.secret}")
+    private String secret;
+
     private SecretKey secretKey;
 
-    public JwtService(@Value("${jwt.secret}") String secret) {
+    @PostConstruct
+    public void init() {
+        log.info("Initializing JwtService with secret: {}", secret);
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
