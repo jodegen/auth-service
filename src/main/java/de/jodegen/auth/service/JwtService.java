@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class JwtService {
 
@@ -23,11 +24,10 @@ public class JwtService {
 
     public JwtService(@Value("${jwt.secret}") String secret) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        System.out.println("SecretKey: " + this.secretKey);
-        System.out.println("Secret: " + secret);
     }
 
     public String generateToken(UserAccount user) {
+        log.info("Secret: {}", secretKey);
         return Jwts.builder()
                 .setSubject(user.getId().toString())
                 .claim("email", user.getEmail())
