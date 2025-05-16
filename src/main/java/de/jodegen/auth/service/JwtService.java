@@ -12,7 +12,6 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JwtService {
@@ -24,8 +23,8 @@ public class JwtService {
 
     public JwtService(@Value("${jwt.secret}") String secret) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        log.info("SecretKey {}", this.secretKey);
-        log.info("Secret {}", secret);
+        System.out.println("SecretKey: " + this.secretKey);
+        System.out.println("Secret: " + secret);
     }
 
     public String generateToken(UserAccount user) {
