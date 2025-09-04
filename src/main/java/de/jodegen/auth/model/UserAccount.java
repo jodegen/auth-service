@@ -27,6 +27,9 @@ public class UserAccount {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
+    @Column(name = "multi_factor_enabled")
+    private boolean multiFactorEnabled = false;
+
     @Column(name = "enabled")
     private boolean enabled = true;
 

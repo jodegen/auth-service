@@ -3,7 +3,7 @@ package de.jodegen.auth.service;
 import de.jodegen.auth.exception.InvalidTokenException;
 import de.jodegen.auth.model.*;
 import de.jodegen.auth.repository.*;
-import de.jodegen.auth.rest.dto.TokenPairResponse;
+import de.jodegen.auth.rest.dto.LoginResponse;
 import lombok.*;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ public class TokenService {
     private final JwtService jwtService;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    public TokenPairResponse generateTokenPair(@NonNull UserAccount userAccount) {
+    public LoginResponse generateTokenPair(@NonNull UserAccount userAccount) {
         String accessToken = jwtService.generateToken(userAccount);
         String refreshTokenValue = UUID.randomUUID().toString();
 
@@ -28,10 +28,10 @@ public class TokenService {
 
         refreshTokenRepository.save(refreshToken);
 
-        return new TokenPairResponse(accessToken, refreshTokenValue);
+        return new LoginResponse(false, null, accessToken, refreshTokenValue);
     }
 
-    public TokenPairResponse refreshAccessToken(@NonNull String refreshTokenValue) {
+    public LoginResponse refreshAccessToken(@NonNull String refreshTokenValue) {
         RefreshToken storedToken = refreshTokenRepository.findByToken(refreshTokenValue)
                 .orElseThrow(() -> new InvalidTokenException("Invalid refresh token"));
 
@@ -43,5 +43,9 @@ public class TokenService {
         refreshTokenRepository.delete(storedToken);
 
         return generateTokenPair(storedToken.getUser());
+    }
+
+    public String generatePendingToken(@NonNull UserAccount userAccount) {
+        return jwtService.generatePendingToken(userAccount);
     }
 }

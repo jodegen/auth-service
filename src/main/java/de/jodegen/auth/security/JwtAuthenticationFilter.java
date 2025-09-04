@@ -6,6 +6,7 @@ import de.jodegen.auth.service.JwtService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.*;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -31,11 +33,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        String jwt = authHeader.substring(7);
+        String token = authHeader.substring(7);
         long userId;
         try {
-            userId = Long.parseLong(jwtService.getUserId(jwt));
+            userId = Long.parseLong(jwtService.getUserId(token));
         } catch (Exception e) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        boolean pendingToken = jwtService.isPendingToken(token);
+
+        if (pendingToken) {
+            log.info("Filtered pending token for user: {}", userId);
+            if (request.getRequestURI().contains("/verify-2fa")) {
+                Optional<UserAccount> userOpt = userAccountRepository.findById(userId);
+                if (userOpt.isPresent()) {
+                    UserAccount user = userOpt.get();
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(user, null, List.of());
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
             filterChain.doFilter(request, response);
             return;
         }

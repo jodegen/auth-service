@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -28,12 +28,22 @@ public class JwtService {
 
     @PostConstruct
     public void init() {
-        log.info("Initializing JwtService with secret: {}", secret);
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(UserAccount user) {
-        log.info("Secret: {}", secretKey);
+    public String generatePendingToken(@NonNull UserAccount userAccount) {
+        log.info("Generating pending token for {}", userAccount);
+
+        return Jwts.builder()
+                .setSubject(userAccount.getId().toString())
+                .claim("multi_factor_pending", true)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 5 * 60 * 1000)) // 5 minutes
+                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateToken(@NonNull UserAccount user) {
         return Jwts.builder()
                 .setSubject(user.getId().toString())
                 .claim("email", user.getEmail())
@@ -66,5 +76,11 @@ public class JwtService {
         } catch (JwtException e) {
             throw new JwtException("Invalid JWT", e);
         }
+    }
+
+    public boolean isPendingToken(@NonNull String token) {
+        Claims claims = parseToken(token);
+        Boolean pending = claims.get("multi_factor_pending", Boolean.class);
+        return pending != null && pending;
     }
 }
